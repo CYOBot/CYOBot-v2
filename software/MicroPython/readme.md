@@ -8,6 +8,16 @@ The repo includes source code for onboard peripherals, including:
 * Network management system, including AP mode and STA mode, DNS
 * * Portal for coding interface and WiFi setup
 
+# Environment setup
+Create a conda environment with **esptool** and **rshell** to interface with the robot following our [Wiki](https://cyobot.notion.site/Establish-USB-connection-b7c086ff2b9b4edba9dc345fd7659f00), or follow the instruction below:
+1. Install miniconda to your device
+2. Create new conda env with the necessary tools by running the following commands
+```bash
+conda create --name cyobot python=3.8
+conda activate cyobot
+pip install esptool rshell
+```
+
 # Installation
 ## Windows
 For Windows, **esptool** and **rshell** work on top of a Conda environment. An `install.ps1` file is included to help with the process.
@@ -20,6 +30,12 @@ To burn the CYOBrain, install `esptool.py` to your computer, and run the followi
 ```bash
 esptool.py --port <PORT> erase_flash
 ```
+
+If you run into `permission denied` problem, run the following command:
+```bash
+chmod 666 <PORT>
+```
+
 Then
 ```bash
 esptool.py -p <PORT> -b 460800 --before default_reset --after hard_reset --chip esp32s3 write_flash --flash_mode dio --flash_size 4MB --flash_freq 80m 0x0 bootloader.bin 0x8000 partition-table.bin 0x10000 micropython.bin
