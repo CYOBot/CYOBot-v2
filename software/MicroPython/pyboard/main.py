@@ -74,6 +74,7 @@ def test_connect_wifi():
             mPlayer = player(None)
             mPlayer.set_vol(100)
         mPlayer.play('file://sdcard/lib/data/wifi-connected.wav')
+        time.sleep(2)
 
 def check_and_connect_wifi():
     global wifi
@@ -220,6 +221,7 @@ def _httpHandlerPostWiFiCredential(httpClient, httpResponse):
         wifi.connect(data["ssid"], data["password"], verbose=True)
         if wifi.wlan.isconnected():
             mPlayer.play('file://sdcard/lib/data/wifi-connected.wav')
+            time.sleep(2)
             break
 
     #! TODO: also store this credential in INTERNAL config so that we can connect in the future auto
