@@ -7,6 +7,7 @@ import webrepl
 import network
 import time
 import json
+import os
 
 ring = LEDRing()
 matrix = Matrix()
@@ -180,6 +181,68 @@ def _httpHandlerGetWiFiConnectivity(httpClient, httpResponse):
             'Access-Control-Allow-Headers': '*'
         })
 
+@MicroWebSrv.route('/api/dir', method='OPTIONS')
+def _httpHandlerGetOptionNextDir(httpClient, httpResponse):
+    httpResponse.WriteResponseOk(headers={
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*'
+    })
+
+@MicroWebSrv.route('/api/dir', 'POST')
+def _httpHandlerGetNextDir(httpClient, httpResponse):
+    # Return a list of objects, each with {"name": str, "isFolder": bool}
+    
+    data = httpClient.ReadRequestContentAsJSON()
+    path = data["dir"] if isinstance(data, dict) else ""  # Ensure valid directory path
+    # print(data, data["dir"])
+
+    try:
+        dir_list = [
+            {"name": entry, "isFolder": os.stat(path + "/" + entry)[0] & 0x4000 != 0}
+            for entry in os.listdir(path)
+        ]
+    except OSError as e:
+        dir_list = []
+        print("Error", e)
+
+    httpResponse.WriteResponseJSONOk(
+        obj=dir_list, 
+        headers={
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': '*',
+            'Access-Control-Allow-Headers': '*'
+        }
+    )
+
+@MicroWebSrv.route('/api/load')
+def _httpHandlerGetSavedFile(httpClient, httpResponse):
+    # check to see if the file is available
+    try:
+        os.stat("/sdcard/tmp")
+        httpResponse.WriteResponseFile("/sdcard/tmp", contentType="application/json", headers={
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': '*',
+            'Access-Control-Allow-Headers': '*'
+        })
+    except:
+        httpResponse.WriteResponseOk(headers={
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': '*',
+            'Access-Control-Allow-Headers': '*'
+        })
+
+@MicroWebSrv.route('/api/save')
+def _httpHandlerGetSavedFile(httpClient, httpResponse):
+    # check to see if the file is available
+    data = httpClient.ReadRequestContentAsJSON()
+    print(data)
+    httpResponse.WriteResponseOk(headers={
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*'
+    })
+
 @MicroWebSrv.route('/api/wifi')
 def _httpHandlerGetWiFi(httpClient, httpResponse):
     global last_wifi_ap_list
@@ -264,7 +327,7 @@ def _httpHandlerPostWiFiCredential(httpClient, httpResponse):
 @MicroWebSrv.route('/api/config', 'POST')
 def _httpHandlerPostConfig(httpClient, httpResponse):
     data = httpClient.ReadRequestContentAsJSON()
-    print(data)
+    # print(data)
     
     try:
         with open("/sdcard/config/portal-config.json") as file:
