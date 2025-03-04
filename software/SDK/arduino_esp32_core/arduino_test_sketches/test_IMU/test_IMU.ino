@@ -5,6 +5,9 @@
 
 // Using I2C mode by default.
 LSM6DSL imu(LSM6DSL_MODE_I2C, IMU_ADDR);
+Orientation orientation = {0.0, 0.0, 0.0};  // Initialize orientation values
+
+
 
 void setup() {
     Serial.begin(9600);
@@ -17,7 +20,15 @@ void setup() {
     }
 }
 
-void loop() {
+void loop() 
+{
+    static unsigned long lastTime = millis();
+    unsigned long currentTime = millis();
+    float dt = (currentTime - lastTime) / 1000.0;
+    lastTime = currentTime;
+
+  ///////////////////////////////////////////
+
     Serial.println("\nAccelerometer:");
     Serial.print("X = ");
     Serial.println(imu.readFloatAccelX(), 4);
@@ -40,5 +51,18 @@ void loop() {
     Serial.print(" Degrees F = ");
     Serial.println(imu.readTemperatureF(), 4);
 
+    ///////////////////////////////////////////
+
+
+    computeOrientation(imu, orientation, dt);
+
+    Serial.print("Yaw: ");
+    Serial.print(orientation.yaw);
+    Serial.print(" Pitch: ");
+    Serial.print(orientation.pitch);
+    Serial.print(" Roll: ");
+    Serial.println(orientation.roll);
+
     delay(1000);
+
 }
