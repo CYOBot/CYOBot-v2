@@ -1,7 +1,7 @@
 #ifndef LSM6DSL_ORIENTATION_H
 #define LSM6DSL_ORIENTATION_H
 
-#include "LSM6DSL_Library.h"
+#include "LSM6DSL.h"
 
 // Constants for sensor conversion
 #define GYRO_SENSITIVITY 0.035      // Adjust based on your gyro range settings
