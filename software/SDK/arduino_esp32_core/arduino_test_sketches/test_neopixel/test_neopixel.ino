@@ -1,4 +1,5 @@
 #include <Adafruit_NeoPixel.h>
+#include "CYOBot_NeoPixel.h"
 #include <list>
 //#include "pins_arduino_cyobrain_v2.h"
 
