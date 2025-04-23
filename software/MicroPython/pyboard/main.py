@@ -232,16 +232,24 @@ def _httpHandlerGetSavedFile(httpClient, httpResponse):
             'Access-Control-Allow-Headers': '*'
         })
 
-@MicroWebSrv.route('/api/save')
-def _httpHandlerGetSavedFile(httpClient, httpResponse):
-    # check to see if the file is available
+@MicroWebSrv.route('/api/save', 'POST')
+def _httpHandlerPostConfig(httpClient, httpResponse):
     data = httpClient.ReadRequestContentAsJSON()
-    print(data)
-    httpResponse.WriteResponseOk(headers={
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': '*',
-        'Access-Control-Allow-Headers': '*'
-    })
+    with open("/sdcard/tmp", "w") as outfile:
+        outfile.write(data["code"])
+    try:
+        httpResponse.WriteResponseOk(headers={
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': '*',
+            'Access-Control-Allow-Headers': '*'
+        })
+    except Exception as e:
+        print(e)
+        httpResponse.WriteReponseError(500, headers={
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': '*',
+            'Access-Control-Allow-Headers': '*'
+        })
 
 @MicroWebSrv.route('/api/wifi')
 def _httpHandlerGetWiFi(httpClient, httpResponse):
