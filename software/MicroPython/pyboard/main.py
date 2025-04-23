@@ -185,7 +185,7 @@ def getWiFiAPList():
     return content
 
 
-@MicroWebSrv.route("/api/config")
+@WebRoute(routePath="/api/config", method="GET")
 def _httpHandlerGetConfig(httpClient, httpResponse):
     httpResponse.WriteResponseFile(
         "/sdcard/config/portal-config.json",
@@ -198,7 +198,7 @@ def _httpHandlerGetConfig(httpClient, httpResponse):
     )
 
 
-@MicroWebSrv.route("/api/internet")
+@WebRoute(routePath="/api/internet", method="GET")
 def _httpHandlerGetWiFiConnectivity(httpClient, httpResponse):
     if wifi.wlan.isconnected():
         httpResponse.WriteResponseJSONOk(
@@ -220,7 +220,7 @@ def _httpHandlerGetWiFiConnectivity(httpClient, httpResponse):
         )
 
 
-@MicroWebSrv.route("/api/wifi")
+@WebRoute(routePath="/api/wifi", method="GET")
 def _httpHandlerGetWiFi(httpClient, httpResponse):
     global last_wifi_ap_list
     global last_wifi_ap_scan_time
@@ -237,7 +237,7 @@ def _httpHandlerGetWiFi(httpClient, httpResponse):
     )
 
 
-@MicroWebSrv.route("/api/wifi", method="OPTIONS")
+@WebRoute(routePath="/api/wifi", method="OPTIONS")
 def _httpHandlerOptionWiFiCredential(httpClient, httpResponse):
     httpResponse.WriteResponseOk(
         headers={
@@ -248,7 +248,7 @@ def _httpHandlerOptionWiFiCredential(httpClient, httpResponse):
     )
 
 
-@MicroWebSrv.route("/api/wifi", "POST")
+@WebRoute(routePath="/api/wifi", method="POST")
 def _httpHandlerPostWiFiCredential(httpClient, httpResponse):
     # receive credentials from portal
     # attempt to connect
@@ -319,7 +319,7 @@ def _httpHandlerPostWiFiCredential(httpClient, httpResponse):
         )
 
 
-@MicroWebSrv.route("/api/config", "POST")
+@WebRoute(routePath="/api/config", method="POST")
 def _httpHandlerPostConfig(httpClient, httpResponse):
     data = httpClient.ReadRequestContentAsJSON()
     print(data)
@@ -351,7 +351,7 @@ def _httpHandlerPostConfig(httpClient, httpResponse):
         )
 
 
-@MicroWebSrv.route("/api/deploy", "POST")
+@WebRoute(routePath="/api/deploy", method="POST")
 def _httpHandlerPostConfig(httpClient, httpResponse):
     data = httpClient.ReadRequestContentAsJSON()
     with open("/sdcard/main.py", "w") as outfile:
@@ -380,33 +380,33 @@ def _httpHandlerPostConfig(httpClient, httpResponse):
 
 
 # proxy everything else back to the local HTTP port
-@WebRoute("GET", "/<path..>")
-@WebRoute("POST", "/<path..>")
-def _proxyAll(mws, request):
-    # reconstruct the full local URL (ESP32 HTTP)
-    url = "http://127.0.0.1:80" + request.PathQ
-    # forward method, headers, and body
-    resp = urequests.request(
-        method=request.Method,
-        url=url,
-        headers=request.Headers,
-        data=request.ReadRequestContent(),
-    )
-    # strip hop‑by‑hop headers
-    for h in ("Connection", "Keep-Alive", "Upgrade", "Transfer-Encoding"):
-        resp.headers.pop(h, None)
-    # send the proxied response back over HTTPS
-    request.Response.ReturnResponse(resp.status_code, resp.headers, resp.content)
+# @WebRoute(method="GET", routePath="/<path..>")
+# @WebRoute(method="POST", routePath="/<path..>")
+# def _proxyAll(mws, request):
+#     # reconstruct the full local URL (ESP32 HTTP)
+#     url = "http://127.0.0.1:80" + request.PathQ
+#     # forward method, headers, and body
+#     resp = urequests.request(
+#         method=request.Method,
+#         url=url,
+#         headers=request.Headers,
+#         data=request.ReadRequestContent(),
+#     )
+#     # strip hop‑by‑hop headers
+#     for h in ("Connection", "Keep-Alive", "Upgrade", "Transfer-Encoding"):
+#         resp.headers.pop(h, None)
+#     # send the proxied response back over HTTPS
+#     request.Response.ReturnResponse(resp.status_code, resp.headers, resp.content)
 
 
 srv = MicroWebSrv()
 srv.RootPath = "/sdcard/portal/"
-srv.BindAddress = ("0.0.0.0", "8000")
+srv.BindAddress = ('0.0.0.0', 8000)
 # srv.EnableSSL(
 #     certFile="/pyboard/cert.pem",
 #     keyFile="/pyboard/key.pem",
 # )
-srv.StartManaged()
+srv.StartManaged(parllProcCount=2)
 
 
 def wait_for_websocket():
