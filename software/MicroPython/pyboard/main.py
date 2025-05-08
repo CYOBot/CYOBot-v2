@@ -158,6 +158,7 @@ def getWiFiAPList():
     content = [{"ssid": x[0].decode('ascii'), "strength": signal_strength(x[3])} for x in ap_list]
     return content
 
+# Get config.json file from sdcard
 @MicroWebSrv.route('/api/config')
 def _httpHandlerGetConfig(httpClient, httpResponse):
     httpResponse.WriteResponseFile("/sdcard/config/portal-config.json", contentType="application/json", headers={
@@ -166,6 +167,7 @@ def _httpHandlerGetConfig(httpClient, httpResponse):
         'Access-Control-Allow-Headers': '*'
     })
 
+# Get internet connectivity status
 @MicroWebSrv.route('/api/internet')
 def _httpHandlerGetWiFiConnectivity(httpClient, httpResponse):
     if wifi.wlan.isconnected():
@@ -181,14 +183,7 @@ def _httpHandlerGetWiFiConnectivity(httpClient, httpResponse):
             'Access-Control-Allow-Headers': '*'
         })
 
-@MicroWebSrv.route('/api/dir', method='OPTIONS')
-def _httpHandlerGetOptionNextDir(httpClient, httpResponse):
-    httpResponse.WriteResponseOk(headers={
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': '*',
-        'Access-Control-Allow-Headers': '*'
-    })
-
+# Get list of files in a directory
 @MicroWebSrv.route('/api/dir', 'POST')
 def _httpHandlerGetNextDir(httpClient, httpResponse):
     # Return a list of objects, each with {"name": str, "isFolder": bool}
@@ -215,28 +210,48 @@ def _httpHandlerGetNextDir(httpClient, httpResponse):
         }
     )
 
+# Get list of files in a directory, CORS bypass
+@MicroWebSrv.route('/api/dir', method='OPTIONS')
+def _httpHandlerGetOptionNextDir(httpClient, httpResponse):
+    httpResponse.WriteResponseOk(headers={
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*'
+    })
+
+# Get saved file from sdcard
 @MicroWebSrv.route('/api/load')
 def _httpHandlerGetSavedFile(httpClient, httpResponse):
-    # check to see if the file is available
     try:
-        os.stat("/sdcard/tmp")
-        httpResponse.WriteResponseFile("/sdcard/tmp", contentType="application/json", headers={
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': '*',
-            'Access-Control-Allow-Headers': '*'
-        })
+        if "tmp" in os.listdir("/sdcard/"):
+            httpResponse.WriteResponseFile("/sdcard/tmp", contentType="application/json", headers={
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+                'Access-Control-Allow-Headers': '*'
+            })
+        else:
+            httpResponse.WriteResponseOk(headers={
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': '*',
+                'Access-Control-Allow-Headers': '*'
+            })    
     except:
         httpResponse.WriteResponseOk(headers={
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': '*',
             'Access-Control-Allow-Headers': '*'
         })
-
+    
+# Save code on portal to sdcard
 @MicroWebSrv.route('/api/save', 'POST')
-def _httpHandlerPostConfig(httpClient, httpResponse):
+def _httpHandlerPostSaveFile(httpClient, httpResponse):
     data = httpClient.ReadRequestContentAsJSON()
-    with open("/sdcard/tmp", "w") as outfile:
-        outfile.write(data["code"])
+    if "xmlText" in data.keys():
+        with open("/sdcard/tmp", "w") as outfile:
+            outfile.write(data["xmlText"])
+    elif "code" in data.keys():
+        with open("/sdcard/tmp", "w") as outfile:
+            outfile.write(data["code"])
     try:
         httpResponse.WriteResponseOk(headers={
             'Access-Control-Allow-Origin': '*',
@@ -251,6 +266,16 @@ def _httpHandlerPostConfig(httpClient, httpResponse):
             'Access-Control-Allow-Headers': '*'
         })
 
+# Save code on portal to sdcard, CORS bypass
+@MicroWebSrv.route('/api/save', method='OPTIONS')
+def _httpHandlerOptionSaveFile(httpClient, httpResponse):
+    httpResponse.WriteResponseOk(headers={
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*'
+    })
+
+# Get list of available WiFi APs
 @MicroWebSrv.route('/api/wifi')
 def _httpHandlerGetWiFi(httpClient, httpResponse):
     global last_wifi_ap_list
@@ -264,14 +289,7 @@ def _httpHandlerGetWiFi(httpClient, httpResponse):
         'Access-Control-Allow-Headers': '*'
     })
 
-@MicroWebSrv.route('/api/wifi', method='OPTIONS')
-def _httpHandlerOptionWiFiCredential(httpClient, httpResponse):
-    httpResponse.WriteResponseOk(headers={
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': '*',
-        'Access-Control-Allow-Headers': '*'
-    })
-
+# Write WiFi credentials to sdcard and connect to the network
 @MicroWebSrv.route('/api/wifi', 'POST')
 def _httpHandlerPostWiFiCredential(httpClient, httpResponse):
     # receive credentials from portal
@@ -332,6 +350,16 @@ def _httpHandlerPostWiFiCredential(httpClient, httpResponse):
             'Access-Control-Allow-Headers': '*'
         })
 
+# WiFi credentials, CORS bypass
+@MicroWebSrv.route('/api/wifi', method='OPTIONS')
+def _httpHandlerOptionWiFiCredential(httpClient, httpResponse):
+    httpResponse.WriteResponseOk(headers={
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*'
+    })
+
+# Write the new WebREPL endpoint to config.json
 @MicroWebSrv.route('/api/config', 'POST')
 def _httpHandlerPostConfig(httpClient, httpResponse):
     data = httpClient.ReadRequestContentAsJSON()
@@ -358,8 +386,9 @@ def _httpHandlerPostConfig(httpClient, httpResponse):
             'Access-Control-Allow-Headers': '*'
         })
 
+# Deploy the new code to main.py
 @MicroWebSrv.route('/api/deploy', 'POST')
-def _httpHandlerPostConfig(httpClient, httpResponse):
+def _httpHandlerPostDeploy(httpClient, httpResponse):
     data = httpClient.ReadRequestContentAsJSON()
     with open("/sdcard/main.py", "w") as outfile:
         outfile.write(data["code"])
