@@ -29,6 +29,7 @@
     }
   },
   "editor": "code",
+  "locale": "en",
   "codeEditor": {
     "loading": {
       "onFinishLoadingDelayMs": 1000,

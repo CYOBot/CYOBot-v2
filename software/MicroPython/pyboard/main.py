@@ -360,30 +360,54 @@ def _httpHandlerOptionWiFiCredential(httpClient, httpResponse):
     })
 
 # Write the new WebREPL endpoint to config.json
+def _deep_update(target, patch):
+    """
+    Recursively merge `patch` into `target`.
+    - If both values under the same key are dicts → recurse.
+    - Otherwise overwrite (add-or-replace).
+    """
+    for k, v in patch.items():
+        if isinstance(v, dict) and isinstance(target.get(k), dict):
+            _deep_update(target[k], v)
+        else:
+            target[k] = v
+
 @MicroWebSrv.route('/api/config', 'POST')
 def _httpHandlerPostConfig(httpClient, httpResponse):
-    data = httpClient.ReadRequestContentAsJSON()
-    # print(data)
-    
+    # Read JSON body ---------------------------------------------------------
     try:
-        with open("/sdcard/config/portal-config.json") as file:
-            content = json.loads(file.read())
-        content["pythonWebREPL"]["endpoint"] = data["wsEndpoint"]
-        
-        with open("/sdcard/config/portal-config.json", "w") as outfile:
-            outfile.write(json.dumps(content))
-        
+        patch = httpClient.ReadRequestContentAsJSON() or {}
+    except Exception as exc:
+        print("Bad JSON:", exc)
+        httpResponse.WriteResponseBadRequest()
+        return
+
+    # Load current config (or start fresh) -----------------------------------
+    try:
+        with open("/sdcard/config/portal-config.json") as f:
+            cfg = json.loads(f.read())
+    except OSError:
+        # File missing or unreadable – start with empty dict and create later
+        cfg = {}
+    
+    # Apply patch ------------------------------------------------------------
+    _deep_update(cfg, patch)
+    
+    # Save back to disk ------------------------------------------------------
+    try:
+        with open("/sdcard/config/portal-config.json", "w") as f:
+            f.write(json.dumps(cfg))
         httpResponse.WriteResponseOk(headers={
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': '*',
-            'Access-Control-Allow-Headers': '*'
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*"
         })
-    except Exception as e:
-        print(e)
-        httpResponse.WriteReponseError(500, headers={
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': '*',
-            'Access-Control-Allow-Headers': '*'
+    except Exception as exc:
+        print("Save error:", exc)
+        httpResponse.WriteResponseError(500, headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*"
         })
 
 # Deploy the new code to main.py
