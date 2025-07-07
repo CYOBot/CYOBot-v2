@@ -7,7 +7,6 @@ import webrepl
 import network
 import time
 import json
-import matplotlib as plt
 
 ring = LEDRing()
 matrix = Matrix()
