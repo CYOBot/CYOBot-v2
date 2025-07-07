@@ -8,8 +8,6 @@ import network
 import time
 import json
 import os
-import sys
-import gc
 
 ring = LEDRing()
 matrix = Matrix()
@@ -20,14 +18,6 @@ ap = None
 last_wifi_ap_list = None
 last_wifi_ap_scan_time = None
 mPlayer = None
-
-# Set the default encoding to utf-8
-if sys.implementation.name == 'micropython':
-    import uos as os
-    import ujson as json
-else:
-    import os
-    import json
 
 def startup():
     global mPlayer
