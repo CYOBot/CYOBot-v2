@@ -6,8 +6,8 @@ import json
 import webrepl
 import network
 import time
-import json
 import torch
+import numpy
 
 ring = LEDRing()
 matrix = Matrix()
