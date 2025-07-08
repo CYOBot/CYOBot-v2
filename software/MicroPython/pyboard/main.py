@@ -8,6 +8,7 @@ import network
 import time
 import torch
 import numpy
+import panda
 
 ring = LEDRing()
 matrix = Matrix()
