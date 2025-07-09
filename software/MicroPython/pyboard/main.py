@@ -8,6 +8,7 @@ import network
 import time
 import torch
 import numpy
+import seaborn
 
 ring = LEDRing()
 matrix = Matrix()
