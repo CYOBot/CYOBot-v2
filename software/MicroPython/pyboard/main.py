@@ -9,7 +9,6 @@ import time
 import torch
 import numpy
 import seaborn
-import flask
 
 ring = LEDRing()
 matrix = Matrix()
