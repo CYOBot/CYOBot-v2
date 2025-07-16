@@ -11,6 +11,8 @@ import math
 import math2
 import math3
 import math4
+import math5
+import math6
 
 ring = LEDRing()
 matrix = Matrix()
