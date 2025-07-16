@@ -9,6 +9,7 @@ import time
 import json
 import math
 import math2
+import math3
 
 ring = LEDRing()
 matrix = Matrix()
