@@ -8,6 +8,7 @@ import network
 import time
 import json
 import math
+import math2
 
 ring = LEDRing()
 matrix = Matrix()
