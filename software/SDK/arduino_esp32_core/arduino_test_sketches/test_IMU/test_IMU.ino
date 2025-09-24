@@ -2,12 +2,11 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "LSM6DSL.h"
+#include "LSM6DSL_Orientation.h"
 
 // Using I2C mode by default.
 LSM6DSL imu(LSM6DSL_MODE_I2C, IMU_ADDR);
 Orientation orientation = {0.0, 0.0, 0.0};  // Initialize orientation values
-
-
 
 void setup() {
     Serial.begin(9600);
@@ -20,49 +19,37 @@ void setup() {
     }
 }
 
-void loop() 
-{
+void loop() {
     static unsigned long lastTime = millis();
     unsigned long currentTime = millis();
     float dt = (currentTime - lastTime) / 1000.0;
     lastTime = currentTime;
 
-  ///////////////////////////////////////////
+    // Read IMU values
+    float ax = imu.readFloatAccelX();
+    float ay = imu.readFloatAccelY();
+    float az = imu.readFloatAccelZ();
 
-    Serial.println("\nAccelerometer:");
-    Serial.print("X = ");
-    Serial.println(imu.readFloatAccelX(), 4);
-    Serial.print("Y = ");
-    Serial.println(imu.readFloatAccelY(), 4);
-    Serial.print("Z = ");
-    Serial.println(imu.readFloatAccelZ(), 4);
+    float gx = imu.readFloatGyroX();
+    float gy = imu.readFloatGyroY();
+    float gz = imu.readFloatGyroZ();
 
-    Serial.println("\nGyroscope:");
-    Serial.print("X = ");
-    Serial.println(imu.readFloatGyroX(), 4);
-    Serial.print("Y = ");
-    Serial.println(imu.readFloatGyroY(), 4);
-    Serial.print("Z = ");
-    Serial.println(imu.readFloatGyroZ(), 4);
-
-    Serial.println("\nThermometer:");
-    Serial.print(" Degrees C = ");
-    Serial.println(imu.readTemperatureC(), 4);
-    Serial.print(" Degrees F = ");
-    Serial.println(imu.readTemperatureF(), 4);
-
-    ///////////////////////////////////////////
-
-
+    // Update orientation
     computeOrientation(imu, orientation, dt);
 
-    Serial.print("Yaw: ");
-    Serial.print(orientation.yaw);
-    Serial.print(" Pitch: ");
-    Serial.print(orientation.pitch);
-    Serial.print(" Roll: ");
-    Serial.println(orientation.roll);
+    // Print in Serial Plotter–friendly format
+    // Each value separated by tab
+    Serial.print(ax, 4);  Serial.print("\t");
+    Serial.print(ay, 4);  Serial.print("\t");
+    Serial.print(az, 4);  Serial.print("\t");
 
-    delay(1000);
+    Serial.print(gx, 4);  Serial.print("\t");
+    Serial.print(gy, 4);  Serial.print("\t");
+    Serial.print(gz, 4);  Serial.print("\t");
 
+    Serial.print(orientation.yaw, 2);   Serial.print("\t");
+    Serial.print(orientation.pitch, 2); Serial.print("\t");
+    Serial.println(orientation.roll, 2);
+
+    delay(50); // ~20 Hz update rate for smoother plotting
 }
