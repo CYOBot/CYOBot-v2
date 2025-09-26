@@ -7,7 +7,7 @@ import webrepl
 import network
 import time
 import json
-
+ hello
 ring = LEDRing()
 matrix = Matrix()
 ring.reset()
