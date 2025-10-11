@@ -1,3 +1,4 @@
+hello world
 from lib.display import *
 from lib.network.microWebSrv import MicroWebSrv
 from lib.wireless import *
