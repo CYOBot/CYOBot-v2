@@ -1,6 +1,5 @@
 #include <Adafruit_NeoPixel.h>
 #include "CYOBot_NeoPixel.h"
-#include <list>
 //#include "pins_arduino_cyobrain_v2.h"
 
 #define LED_PIN NEO_BRAIN
@@ -9,8 +8,6 @@
 #define MAX_PIXEL_LIST 25
 
 Adafruit_NeoPixel matrix(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
-
-
 
 struct Pixel 
 {
@@ -171,11 +168,103 @@ void set_manual_matrix(Pixel pixel)
   matrix.show();
 }
 
-//void set_character(char c, int offset = 0, Pixel pixel = {5, 5, 5}, bool multiplex = false){
-//   uint8_t* test_nested_list[9] = {};
-//   uint8_t test[5] = {1, 2, 3, 4, 5};
-//   test_nested_list[0] = &test;
-//}
+int get_alphabet_index(char c) {
+  for (int i = 0; i < ALPHABET_SIZE; i++) {
+    if (alphabet[i].character == c) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+int get_offset_list_index(int offset) {
+  if (offset > 6 || offset < -6) return -1;
+  return 6 - offset;
+}
+
+void set_character(char c, int offset, uint8_t r, uint8_t g, uint8_t b, bool multiplex = false) {
+  int char_idx = get_alphabet_index(c);
+  if (char_idx == -1) return;
+
+  int offset_idx = get_offset_list_index(offset);
+  if (offset_idx == -1) return;
+
+  for (int i = 0; i < alphabet[char_idx].count; i++) {
+    uint8_t pixel_pos = alphabet[char_idx].indicies[i];
+    int16_t mapped_pixel = offset_pixel_lists[offset_idx].pixels[pixel_pos];
+    
+    if (mapped_pixel != -1) {
+       matrix.setPixelColor(mapped_pixel, matrix.Color(r, g, b));
+    }
+  }
+
+  if (!multiplex) {
+    matrix.show();
+  }
+}
+
+void scroll_message(String message, int speed_ms, uint8_t r, uint8_t g, uint8_t b) {
+  const int MAX_PIPELINE = 10;
+  struct ActiveChar {
+    char character;
+    int offset;
+  };
+
+  ActiveChar pipeline[MAX_PIPELINE];
+  int pipelineCount = 0;
+  
+  int msgIndex = 0;
+  int msgLen = message.length();
+
+  if (msgLen > 0) {
+    pipeline[0].character = message.charAt(0);
+    pipeline[0].offset = -6;
+    pipelineCount = 1;
+    msgIndex++;
+  }
+
+  while (pipelineCount > 0 || msgIndex < msgLen) {
+    matrix.clear();
+
+    if (pipelineCount == 0 && msgIndex < msgLen) {
+         pipeline[pipelineCount].character = message.charAt(msgIndex++);
+         pipeline[pipelineCount].offset = -6;
+         pipelineCount++;
+    }
+    
+    for (int i = 0; i < pipelineCount; i++) {
+        set_character(pipeline[i].character, pipeline[i].offset, r, g, b, true);
+    }
+    matrix.show();
+    delay(speed_ms);
+
+    // Update offsets
+    for (int i = 0; i < pipelineCount; i++) {
+        pipeline[i].offset++;
+    }
+
+    // Remove finished characters
+    if (pipelineCount > 0 && pipeline[0].offset > 6) {
+        for (int i = 0; i < pipelineCount - 1; i++) {
+            pipeline[i] = pipeline[i+1];
+        }
+        pipelineCount--;
+    }
+
+    // Add new character
+    if (msgIndex < msgLen) {
+        if (pipelineCount > 0) {
+             if (pipeline[pipelineCount-1].offset == 1) { 
+                 if (pipelineCount < MAX_PIPELINE) {
+                     pipeline[pipelineCount].character = message.charAt(msgIndex++);
+                     pipeline[pipelineCount].offset = -6;
+                     pipelineCount++;
+                 }
+             }
+        }
+    }
+  }
+}
 
 void setup() 
 {
@@ -185,19 +274,12 @@ void setup()
 
 void loop()
 {
-  Pixel pixel;
-  pixel_init(&pixel, 0, 0, 0, 0);
-  pixel_set(&pixel,100, 0, 20);
-//  Pixel pixel = {10, 20, 10};
-  set_all_matrix(pixel);
-  delay(5000);
-  //reset_matrix();
+  // Example usage of new functions
+  scroll_message("CYOBOT", 100, 50, 20, 100);
+  delay(1000);
+  
   clear_matrix();
-  delay(5000);
-  set_manual_matrix(pixel);
-  delay(5000);
-  pixel_set(&pixel,100, 0, 255);
-  set_all_matrix(pixel);
-  delay(5000);
+  set_character('!', 0, 200, 0, 20);
+  delay(2000);
 }
 

@@ -2,7 +2,6 @@
 #define CYOBOT_NEOPIXEL_H
 
 #include <Adafruit_NeoPixel.h>
-#include <list>
 
 #define LED_COUNT         33
 #define MAX_CHAR_INDICES  25
@@ -16,10 +15,5 @@ typedef struct
 } Char_Bitmap;
 
 extern const Char_Bitmap char_A;
-
-
-
-
-
 
 #endif
